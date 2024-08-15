@@ -1,0 +1,401 @@
+#!/usr/bin/env node
+
+const fs = require('fs')
+const yaml = require('js-yaml')
+const matter = require('gray-matter')
+const { marked } = require('marked')
+const pug = require('pug')
+const hljs = require('highlight.js')
+const { markedHighlight } = require('marked-highlight')
+const path = require('path')
+
+marked.use(markedHighlight({
+    langPrefix: 'hljs language-',
+    highlight: function(code, lang) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    }
+}))
+
+function copyDirectory(source, destination) {
+    fs.mkdirSync(destination, { recursive: true })
+    const items = fs.readdirSync(source)
+    items.forEach(item => {
+        const sourceItemPath = path.join(source, item)
+        const destinationItemPath = path.join(destination, item)
+        const stat = fs.statSync(sourceItemPath)
+        if (stat.isDirectory()) {
+            copyDirectory(sourceItemPath, destinationItemPath)
+        } else {
+            fs.copyFileSync(sourceItemPath, destinationItemPath)
+        }
+    })
+}
+
+function removeDirectorySync(directory) {
+    try {
+        fs.rmSync(directory, { recursive: true, force: true })
+        console.log("Directory and its contents removed.")
+    } catch (err) {
+        console.error(`Error removing directory: ${err.message}`)
+    }
+}
+
+function readConfig() {
+    const fileContents = fs.readFileSync('.site/config.yaml', 'utf8')
+    return yaml.load(fileContents)
+}
+
+
+function parseMD(file) {
+    
+    const fileContents = fs.readFileSync(path.join("./", file), 'utf8')
+    
+    const { data: metadata, content: markdownContent } = matter(fileContents)
+
+    const htmlContent = marked(markdownContent)
+
+    return {
+        meta: metadata,
+        content: htmlContent
+    }
+
+    // Combine metadata with HTML content
+    const completeHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
+        <meta charset="UTF-8">
+        <title>${metadata.title}</title>
+        <meta name="author" content="${metadata.author}">
+        <meta name="date" content="${metadata.date}">
+        <link rel="stylesheet" href="../.site/templates/all.css">
+    </head>
+    <body>
+        ${htmlContent}
+    </body>
+    </html>
+    `;
+
+    // Save the HTML content to a file
+    fs.writeFileSync('.build/output.html', completeHtml);
+
+    console.log('Markdown with metadata has been converted to HTML and saved to output.html');
+
+}
+
+function compile(template, content, output) {
+    if (template == null) {
+        console.error("Template is not defined")
+        return
+    }
+    const compiledFunction = pug.compileFile(`.site/templates/${template}.pug`);
+    const data = {
+        title: 'Pug Example',
+        message: 'Hello, Puggi!',
+        sub: "test",
+        ...content,
+        site: {posts: []}
+    }
+
+    //console.log(data)
+    
+    const dirname = path.dirname(output)
+    if (!fs.existsSync(dirname)) {
+        fs.mkdirSync(dirname, { recursive: true })
+    }
+
+    const html = compiledFunction(data)
+    fs.writeFileSync(output, html)
+    console.log(`HTML has been rendered and saved to ${output}`);
+}
+
+function compileData(template, content, output) {
+    const compiledFunction = pug.compileFile(`.site/templates/${template}.pug`);
+    
+    const dirname = path.dirname(output)
+    if (!fs.existsSync(dirname)) {
+        fs.mkdirSync(dirname, { recursive: true })
+    }
+
+    const html = compiledFunction(content)
+    fs.writeFileSync(output, html)
+    console.log(`HTML has been rendered and saved to ${output}`);
+}
+
+function getAllFilesWithExtension(directory, extension, excludes) {
+    let results = []
+    function readDirectory(directory) {
+        const items = fs.readdirSync(directory)
+        
+        items.forEach(item => {
+            if(excludes.includes(item)) {
+                return
+            }
+            const itemPath = path.join(directory, item)
+            const stat = fs.statSync(itemPath)
+            if (stat.isDirectory()) {
+                readDirectory(itemPath)
+            } else if (path.extname(item) === extension) {
+                results.push(itemPath)
+            }
+        })
+    }
+    readDirectory(directory)
+    return results
+}
+
+const Client = require('ssh2-sftp-client')
+
+
+// Read the private key from the default location
+const privateKey = fs.readFileSync(path.resolve(process.env.HOME, '.ssh/id_rsa'))
+
+async function uploadDirectory(serverConfig, localDirPath) {
+    const sftp = new Client()
+    await sftp.connect(serverConfig)
+    try {
+        await upload(sftp, config, localDirPath, serverConfig.path)
+    } catch (err) {
+        console.error(`Error: ${err.message}`)
+      } finally {
+        await sftp.end()
+        console.log('Connection closed')
+    }
+}
+
+async function upload(sftp, config, localPath, remotePath) {
+
+    console.log('Connected to the server')
+
+    const files = fs.readdirSync(localPath)
+
+    for (const file of files) {
+      const localFilePath = path.join(localPath, file)
+      const remoteFilePath = `${remotePath}/${file}`
+
+      if (fs.statSync(localFilePath).isDirectory()) {
+        await sftp.mkdir(remoteFilePath, true)
+        await upload(sftp, config, localFilePath, remoteFilePath)
+      } else {
+        const fileContent = fs.readFileSync(localFilePath)
+        await sftp.put(Buffer.from(fileContent), remoteFilePath)
+        console.log(`File transferred successfully: ${localFilePath}`)
+//        await sftp.exec(`chown www-data:www-data ${remoteFilePath}`)
+//        console.log(`Changed owner to www-data for: ${remoteFilePath}`)
+      }
+    }
+  
+}
+
+function pathToArray(filePath) {
+    // Normalize the file path to handle different OS path separators
+    const normalizedPath = path.normalize(filePath)
+    // Split the path into an array of directories
+    const pathArray = normalizedPath.split(path.sep)
+    return pathArray
+}
+
+
+function parseYML(file) {
+    const fileContents = fs.readFileSync(file, 'utf8')
+    return yaml.load(fileContents)
+}
+
+function readMetadata() {
+    let htmlExtension = "html"
+
+    let list = getAllFilesWithExtension('.',".md", [".build", ".site"])
+        .map(f => { return {
+            pathMD: f,
+            type: "md",
+            data: {},
+            md: parseMD(f)
+        }})
+    // sites needs to include data from header
+    
+    list = list.concat(
+        getAllFilesWithExtension('.',".yml", [".build", ".site"])
+        .map(f => { return {
+            pathMD: f,
+            type: "yml",
+            data: parseYML(f),
+            md: {meta: {}}
+        }}) 
+    )
+
+    for(const site of list) {
+        
+        //console.log(site.md.meta.path)
+        // TODO: data can set default path
+        if (site.md.meta?.path != null && site.md.meta?.path != undefined) {
+            site.path = path.join("/", site.md.meta.path)
+        } else {
+            const parsedPath = path.parse(site.pathMD)
+            const basePath = path.join("/", parsedPath.dir, parsedPath.name)
+            site.path = basePath
+        }
+        
+        
+        
+        
+        // add proper extension
+        const parsedPath = path.parse(site.path)
+        parsedPath.ext = htmlExtension.startsWith('.') ? htmlExtension : `.${htmlExtension}`
+        parsedPath.base = `${parsedPath.name}${parsedPath.ext}`
+        site.path = path.format(parsedPath)
+
+        // add dirs metadata
+        const dirArray = pathToArray(site.path)
+        site.fileName = dirArray.pop()
+        dirArray.shift()
+        site.dir = dirArray
+
+        site.meta = site.md.meta
+        
+        // For tests
+        //delete site.md
+        
+        site.hidden = site.data.hidden || false
+    }
+
+    return list
+}
+
+// Custom renderer to avoid unnecessary <p> tags
+const renderer = new marked.Renderer();
+renderer.paragraph = (text) => {
+    
+    return text.text
+}
+
+
+function parseMarkdown(obj) {
+    for (let key in obj) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        if (Array.isArray(obj[key])) {
+          for (let i = 0; i < obj[key].length; i++) {
+            if (typeof obj[key][i] === 'object' && obj[key][i] !== null) {
+              parseMarkdown(obj[key][i]);
+            } 
+            else if (typeof obj[key][i] === 'string') {
+              obj[key][i] = marked(obj[key][i], { renderer });
+            }
+          }
+        } else {
+          parseMarkdown(obj[key]);
+        }
+      } else if (typeof obj[key] === 'string') {
+        obj[key] = marked(obj[key], { renderer });
+      }
+    }
+}
+  
+
+const buildFolder = './.build'
+
+
+//loadTemplate()
+//parseMD()
+
+let config = readConfig()
+
+
+const serverConfig = {
+    host: config.remote.host,
+    port: 22,
+    username: config.remote.user,
+    privateKey: privateKey,
+    path: config.remote.path
+}
+  
+console.log(serverConfig)
+
+
+
+
+removeDirectorySync(buildFolder)
+copyDirectory("./.site/static", path.join(buildFolder, "static"))
+
+let data = readMetadata()
+let pages = data.map(site => {
+    return {
+        title: site.meta.title,
+        url: site.path
+    }
+})
+
+for(const site of data) {
+    if (site.type == "md") {
+        compile(site.meta.layout, 
+            {
+                content: site.md.content,
+                title: site.meta.title,
+                hidden: false,
+                pages
+            },
+            path.join(buildFolder, site.path))
+    } else if (site.type == "yml") {
+        let data = {...site.data}
+        delete data.layout
+        parseMarkdown(data)
+        compileData(site.data.layout, 
+                    {data, pages, hidden: data.hidden},
+                    path.join(buildFolder, site.path))
+    }
+}
+
+//console.log(readMetadata())
+// sajt
+
+
+uploadDirectory(serverConfig, buildFolder)
+
+/*
+process.exit(0)
+
+
+
+// Add watchers 
+
+const chokidar = require('chokidar')
+const directoryPath = "."
+
+// Initialize watcher
+const watcher = chokidar.watch(directoryPath, {
+  ignored: /(^|[\/\\])\../, // ignore dotfiles
+  persistent: true
+});
+
+
+
+// Add event listeners
+watcher
+  .on('add', path => console.log(`File ${path} has been added`))
+  .on('change', path => console.log(`File ${path} has been changed`))
+  .on('unlink', path => console.log(`File ${path} has been removed`))
+  .on('error', error => console.error(`Watcher error: ${error}`));
+
+console.log(`Watching for changes in ${directoryPath}`);
+
+
+
+
+
+
+*/
+
+// Start server
+
+const express = require('express')
+const app = express()
+const PORT = process.env.PORT || 3000
+
+app.use(express.static('./.build'))
+//console.log(path.join(__dirname, '.build'))
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`)
+});
+

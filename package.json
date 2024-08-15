@@ -1,0 +1,30 @@
+{
+  "name": "sajt",
+  "version": "0.0.1",
+  "description": "Static site generator based on pug/html and yaml files",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "sajt": "./bin/sajt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/artur-gurgul-pro/sajt.git"
+  },
+  "keywords": [
+    "generator",
+    "utils",
+    "static",
+    "sites",
+    "ssh",
+    "ftp"
+  ],
+  "author": "Artur Gurgul",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/artur-gurgul-pro/sajt/issues"
+  },
+  "homepage": "https://github.com/artur-gurgul-pro/sajt#readme"
+}
