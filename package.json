@@ -1,6 +1,7 @@
 {
   "name": "sajt",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "type": "module",
   "description": "Static site generator based on pug/html and yaml files",
   "main": "index.js",
   "scripts": {
@@ -26,5 +27,19 @@
   "bugs": {
     "url": "https://github.com/artur-gurgul-pro/sajt/issues"
   },
-  "homepage": "https://github.com/artur-gurgul-pro/sajt#readme"
+  "homepage": "https://github.com/artur-gurgul-pro/sajt#readme",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "express": "^4.19.2",
+    "fs-extra": "^11.2.0",
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.10.0",
+    "js-yaml": "^4.1.0",
+    "marked": "^14.0.0",
+    "marked-highlight": "^2.1.4",
+    "pug": "^3.0.3",
+    "ssh2": "^1.15.0",
+    "ssh2-sftp-client": "^11.0.0"
+  }
 }

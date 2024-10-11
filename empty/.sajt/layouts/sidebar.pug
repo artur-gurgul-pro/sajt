@@ -1,0 +1,10 @@
+nav
+  h2(style="font-size: 20px; margin: 0px;") Hi. I'm 
+    a(href="/") Artur Gurgul
+  h2(style="font-size: 15px; margin-top: -0.5em;") and this is my notepad.
+  hr.hr-text(data-content="Contents")
+  ul#blog-posts.posts
+    each page in pages.filter(it => it.hidden != true && it.title != undefined )
+      li
+        span &raquo;
+        a(href=page.url, style=(false ? "font-weight: bold;" : ""))= page.title
