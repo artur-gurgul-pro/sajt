@@ -45,7 +45,7 @@ export function cp(source, destination) {
     })
 }
 
-function pathToArray(filePath) {
+export function pathToArray(filePath) {
     // Normalize the file path to handle different OS path separators
     const normalizedPath = path.normalize(filePath)
     // Split the path into an array of directories

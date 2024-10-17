@@ -1,0 +1,23 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Artur Gurgul - #{title}
+    meta(name="author" content="Artur Gurgul")
+    meta(name="description" content="This is my notepad")
+
+    link(rel="shortcut icon" href="/favicon.png")
+    link(rel="alternate" type="application/atom+xml" title="#{site.data.theme.name}" href="#{site.url}/atom.xml")
+    link(rel="stylesheet" href="/static/css/all.css")
+    link(rel="stylesheet" href="/static/css/hightlight.css")
+  body
+    .container
+      .sidebar
+        include sidebar.pug
+      .scroll
+        .content
+          h1.title= title
+          #post!= content
+          .footer
+            include footer.pug

@@ -5,7 +5,8 @@
   "description": "Static site generator based on pug/html and yaml files",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ./src/desktop/main.js"
   },
   "bin": {
     "sajt": "./bin/sajt"
@@ -41,5 +42,8 @@
     "pug": "^3.0.3",
     "ssh2": "^1.15.0",
     "ssh2-sftp-client": "^11.0.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.1"
   }
 }

@@ -1,9 +1,5 @@
 const Client = require('ssh2-sftp-client')
 
-
-// Read the private key from the default location
-const privateKey = fs.readFileSync(path.resolve(process.env.HOME, '.ssh/id_rsa'))
-
 async function uploadDirectory(serverConfig, localDirPath) {
     const sftp = new Client()
     await sftp.connect(serverConfig)

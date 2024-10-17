@@ -1,6 +1,6 @@
-const fs = require('fs')
-const pug = require('pug')
-const path = require('path')
+import fs from 'fs'
+import pug from 'pug'
+import path from 'path'
 
 function removeDirectorySync(directory) {
     try {
@@ -11,8 +11,12 @@ function removeDirectorySync(directory) {
     }
 }
 
-function readConfig() {
-    const fileContents = fs.readFileSync('.site/config.yaml', 'utf8')
+import yaml from 'js-yaml'
+
+export function readConfig() {
+    const __dirname =  process.cwd()
+    const configPath = path.join(__dirname, '.sajt/config.yaml')
+    const fileContents = fs.readFileSync(configPath, 'utf8')
     return yaml.load(fileContents)
 }
 
@@ -21,7 +25,7 @@ function compile(template, content, output) {
         console.error("Template is not defined")
         return
     }
-    const compiledFunction = pug.compileFile(`.site/templates/${template}.pug`);
+    const compiledFunction = pug.compileFile(`.sajt/layouts/${template}.pug`);
     const data = {
         ...content,
         site: {posts: []}
@@ -50,6 +54,8 @@ function compileData(template, content, output) {
     console.log(`HTML has been rendered and saved to ${output}`);
 }
 
+import { getAllFilesWithExtension, pathToArray, parseYML } from './utils.js'
+import { parseMD } from './markdown.js'
 
 function readMetadata(ignore) {
     let htmlExtension = "html"
@@ -99,72 +105,50 @@ function readMetadata(ignore) {
 
         site.meta = site.md.meta
         
-        site.hidden = site.data.hidden || false
+        site.hidden = site.data?.hidden || false
     }
 
     return list
 }
 
+import { cp } from "./utils.js"
+import { parseMarkdown } from './markdown.js'
 
-  
+export function build(config) {
+    removeDirectorySync(config.buildDir)
+    cp("./.sajt/static", path.join(config.buildDir, "static"))
 
-const buildFolder = './.build'
+    let data = readMetadata(config.ignore)
+    let pages = data.map(site => {
+        return {
+            title: site.meta.title,
+            url: site.path
+        }
+    })
 
-
-//loadTemplate()
-//parseMD()
-
-let config = readConfig()
-
-
-const serverConfig = {
-    host: config.remote.host,
-    port: 22,
-    username: config.remote.user,
-    privateKey: privateKey,
-    path: config.remote.path
-}
-
-
-
-
-removeDirectorySync(buildFolder)
-copyDirectory("./.site/static", path.join(buildFolder, "static"))
-
-let data = readMetadata()
-let pages = data.map(site => {
-    return {
-        title: site.meta.title,
-        url: site.path
+    for(const site of data) {
+        if (site.type == "md") {
+            compile(site.meta.layout, 
+                {
+                    content: site.md.content,
+                    title: site.meta.title,
+                    hidden: false,
+                    pages
+                },
+                path.join(config.buildDir, site.path))
+        } else if (site.type == "yml") {
+            let data = {...site.data}
+            delete data.layout
+            parseMarkdown(data)
+            compileData(site.data.layout, 
+                        {data, pages, hidden: data.hidden},
+                        path.join(config.buildDir, site.path))
+        }
     }
-})
 
-for(const site of data) {
-    if (site.type == "md") {
-        compile(site.meta.layout, 
-            {
-                content: site.md.content,
-                title: site.meta.title,
-                hidden: false,
-                pages
-            },
-            path.join(buildFolder, site.path))
-    } else if (site.type == "yml") {
-        let data = {...site.data}
-        delete data.layout
-        parseMarkdown(data)
-        compileData(site.data.layout, 
-                    {data, pages, hidden: data.hidden},
-                    path.join(buildFolder, site.path))
-    }
+    //console.log(readMetadata())
+    // sajt
+
+    // Not to upload now
+    //uploadDirectory(serverConfig, buildFolder)
 }
-
-//console.log(readMetadata())
-// sajt
-
-
-uploadDirectory(serverConfig, buildFolder)
-
-
-
-

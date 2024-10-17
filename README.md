@@ -15,7 +15,9 @@ Publishing throught SSH (ftp and dav is planned)
 
     sajt build 
         --clean # remove local files that are not revelant to the project anymore
-        --publish or --serve -p 3000 --watch # Publish or serve with options -p PORT, --watch observe changes and rebuild the page if thare are any  
+        --publish or --serve -p 3000 --watch # Publish or serve with options -p PORT, --watch observe changes and rebuild the page if thare are any 
+        --config config.yaml or -c config.yaml
+        --private # include private resources as well
 
     sajt publish 
         --override # default is skip, if file exists, do not change it
@@ -23,7 +25,7 @@ Publishing throught SSH (ftp and dav is planned)
 
 ### Project structure 
 
-.sajt/config.yaml
+.sajt/config.yaml # default config, you can override values pointing secundary file using `--config` flag
 .sajt/media  # copy all files as they are
 .sajt/layouts # pug files that describes the layout the pages
 

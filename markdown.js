@@ -1,7 +1,9 @@
-const hljs = require('highlight.js')
-const { marked } = require('marked')
-const { markedHighlight } = require('marked-highlight')
-const matter = require('gray-matter')
+import hljs from 'highlight.js'
+import { marked } from 'marked'
+import { markedHighlight } from 'marked-highlight'
+import matter from 'gray-matter'
+import fs from 'fs'
+import path from 'path'
 
 marked.use(markedHighlight({
     langPrefix: 'hljs language-',
@@ -11,7 +13,7 @@ marked.use(markedHighlight({
     }
 }))
 
-function parseMD(file) {
+export function parseMD(file) {
     
     const fileContents = fs.readFileSync(path.join("./", file), 'utf8')
     
@@ -25,13 +27,13 @@ function parseMD(file) {
     }
 }
 
-const renderer = new marked.Renderer();
+const renderer = new marked.Renderer()
 renderer.paragraph = (text) => {
     return text.text
 }
 
 
-function parseMarkdown(obj) {
+export function parseMarkdown(obj) {
     for (let key in obj) {
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         if (Array.isArray(obj[key])) {
