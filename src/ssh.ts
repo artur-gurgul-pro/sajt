@@ -1,4 +1,4 @@
-const Client = require('ssh2-sftp-client')
+/*const Client = require('ssh2-sftp-client')
 
 async function uploadDirectory(serverConfig, localDirPath) {
     const sftp = new Client()
@@ -33,3 +33,4 @@ async function upload(sftp, config, localPath, remotePath) {
       }
     }
 }
+*/

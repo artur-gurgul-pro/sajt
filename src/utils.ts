@@ -2,14 +2,14 @@ import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 
-export function parseYML(file) {
+export function parseYML(file: string) {
     const fileContents = fs.readFileSync(file, 'utf8')
     return yaml.load(fileContents)
 }
 
-export function getAllFilesWithExtension(directory, extension, excludes) {
-    let results = []
-    function readDirectory(directory) {
+export function getAllFilesWithExtension(directory: string, extension: string, excludes: string[]): string[] {
+    let results: string[] = []
+    function readDirectory(directory: string) {
         const items = fs.readdirSync(directory)
         
         items.forEach(item => {
@@ -30,7 +30,7 @@ export function getAllFilesWithExtension(directory, extension, excludes) {
 }
 
 // copyDirectory
-export function cp(source, destination) {
+export function cp(source: string, destination: string) {
     fs.mkdirSync(destination, { recursive: true })
     const items = fs.readdirSync(source)
     items.forEach(item => {
@@ -45,7 +45,7 @@ export function cp(source, destination) {
     })
 }
 
-export function pathToArray(filePath) {
+export function pathToArray(filePath: string) {
     // Normalize the file path to handle different OS path separators
     const normalizedPath = path.normalize(filePath)
     // Split the path into an array of directories

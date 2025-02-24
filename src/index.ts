@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
-import fs from 'fs-extra'
+//import fs from 'fs-extra'
 import path from 'path'
 import { newProject, buildProject, appProject } from './project.js'
 import { serve } from './serve.js'

@@ -13,7 +13,7 @@ marked.use(markedHighlight({
     }
 }))
 
-export function parseMD(file) {
+export function parseMD(file: string) {
     
     const fileContents = fs.readFileSync(path.join("./", file), 'utf8')
     
@@ -33,7 +33,7 @@ renderer.paragraph = (text) => {
 }
 
 
-export function parseMarkdown(obj) {
+export function parseMarkdown(obj: any) {
     for (let key in obj) {
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         if (Array.isArray(obj[key])) {

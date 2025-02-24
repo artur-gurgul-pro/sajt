@@ -29,7 +29,7 @@ export function buildProject() {
     }
 
     config.remote.port = 22
-    config.remote.privateKey = fs.readFileSync(path.resolve(process.env.HOME, '.ssh/id_rsa'))
+    config.remote.privateKey = fs.readFileSync(path.resolve(process.env.HOME ?? "", '.ssh/id_rsa'))
 
 
     build(config)
@@ -50,10 +50,10 @@ export function appProject() {
     //run()
     
     //const child = proc.spawn(electron, ["."])
-    console.log(electron)
-    console.log(electron.default)
+    // console.log(electron)
+    // console.log(electron.default)
 
-    const child = proc.spawn(electron.default, [".build"])
+//    const child = proc.spawn(electron.default, [".build"])
     
     // https://www.matthewslipper.com/2019/09/22/everything-you-wanted-electron-child-process.html
     // exec('node start', (error, stdout, stderr) => {

@@ -1,26 +1,30 @@
 import fs from 'fs'
 import pug from 'pug'
 import path from 'path'
+import yaml from 'js-yaml'
 
-function removeDirectorySync(directory) {
+import { cp } from "./utils.js"
+import { parseMarkdown } from './markdown.js'
+import { getAllFilesWithExtension, pathToArray, parseYML } from './utils.js'
+import { parseMD } from './markdown.js'
+
+function removeDirectorySync(directory: string) {
     try {
         fs.rmSync(directory, { recursive: true, force: true })
         console.log("Directory and its contents removed.")
-    } catch (err) {
+    } catch (err: any) {
         console.error(`Error removing directory: ${err.message}`)
     }
 }
 
-import yaml from 'js-yaml'
-
-export function readConfig() {
+export function readConfig(): any {
     const __dirname =  process.cwd()
     const configPath = path.join(__dirname, '.sajt/config.yaml')
     const fileContents = fs.readFileSync(configPath, 'utf8')
     return yaml.load(fileContents)
 }
 
-function compile(template, content, output) {
+function compile(template: string, content: any, output: string) {
     if (template == null) {
         console.error("Template is not defined")
         return
@@ -41,43 +45,43 @@ function compile(template, content, output) {
     console.log(`HTML has been rendered and saved to ${output}`);
 }
 
-function compileData(template, content, output) {
-    const compiledFunction = pug.compileFile(`.sajt/layouts/${template}.pug`);
+function compileData(template: string, content: object, output: string) {
+    const compiledFunction = pug.compileFile(`.sajt/layouts/${template}.pug`)
     
     const dirname = path.dirname(output)
     if (!fs.existsSync(dirname)) {
         fs.mkdirSync(dirname, { recursive: true })
     }
 
+    
     const html = compiledFunction(content)
     fs.writeFileSync(output, html)
     console.log(`HTML has been rendered and saved to ${output}`);
 }
 
-import { getAllFilesWithExtension, pathToArray, parseYML } from './utils.js'
-import { parseMD } from './markdown.js'
 
-function readMetadata(ignore) {
+
+function readMetadata(ignore: string[]) {
     let htmlExtension = "html"
 
-    let list = getAllFilesWithExtension('.',".md", ignore)
+    let listMD = getAllFilesWithExtension('.',".md", ignore)
         .map(f => { return {
             pathMD: f,
             type: "md",
-            data: {},
+            data: {} as any,
             md: parseMD(f)
-        }})
+        } as any })
     // sites needs to include data from header
     
-    list = list.concat(
-        getAllFilesWithExtension('.',".yml", ignore)
-        .map(f => { return {
-            pathMD: f,
-            type: "yml",
-            data: parseYML(f),
-            md: {meta: {}}
-        }}) 
-    )
+    let listYML = getAllFilesWithExtension('.',".yml", ignore)
+    .map(f => { return {
+        pathMD: f,
+        type: "yml",
+        data: parseYML(f),
+        md: {meta: {}}
+    } as any })
+
+    let list = listMD.concat(listYML)
 
     for(const site of list) {
         
@@ -111,10 +115,9 @@ function readMetadata(ignore) {
     return list
 }
 
-import { cp } from "./utils.js"
-import { parseMarkdown } from './markdown.js'
 
-export function build(config) {
+
+export function build(config: any) {
     removeDirectorySync(config.buildDir)
     cp("./.sajt/static", path.join(config.buildDir, "static"))
 

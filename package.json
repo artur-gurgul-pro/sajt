@@ -3,10 +3,13 @@
   "version": "0.0.2",
   "type": "module",
   "description": "Static site generator based on pug/html and yaml files",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ./src/desktop/main.js"
+    "start": "electron ./src/desktop/main.js",
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "bin": {
     "sajt": "./bin/sajt"
@@ -44,6 +47,11 @@
     "ssh2-sftp-client": "^11.0.0"
   },
   "devDependencies": {
-    "electron": "^33.0.1"
+    "@types/express": "^5.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.13.5",
+    "@types/pug": "^2.0.10",
+    "electron": "^33.0.1",
+    "typescript": "^5.7.3"
   }
 }
