@@ -1,7 +1,6 @@
 import fs from 'fs'
 import pug from 'pug'
 import path from 'path'
-import yaml from 'js-yaml'
 
 import { cp } from "./utils.js"
 import { parseMarkdown } from './markdown.js'
@@ -17,17 +16,10 @@ function removeDirectorySync(directory: string) {
     }
 }
 
-export function readConfig(): any {
-    const __dirname =  process.cwd()
-    const configPath = path.join(__dirname, '.sajt/config.yaml')
-    const fileContents = fs.readFileSync(configPath, 'utf8')
-    return yaml.load(fileContents)
-}
-
 function compile(template: string, content: any, output: string) {
     if (template == null) {
-        console.error("Template is not defined")
-        return
+        console.error("Template is not defined, loading the default")
+        template = "default"
     }
     const compiledFunction = pug.compileFile(`.sajt/layouts/${template}.pug`);
     const data = {
@@ -53,13 +45,10 @@ function compileData(template: string, content: object, output: string) {
         fs.mkdirSync(dirname, { recursive: true })
     }
 
-    
     const html = compiledFunction(content)
     fs.writeFileSync(output, html)
     console.log(`HTML has been rendered and saved to ${output}`);
 }
-
-
 
 function readMetadata(ignore: string[]) {
     let htmlExtension = "html"
@@ -71,7 +60,6 @@ function readMetadata(ignore: string[]) {
             data: {} as any,
             md: parseMD(f)
         } as any })
-    // sites needs to include data from header
     
     let listYML = getAllFilesWithExtension('.',".yml", ignore)
     .map(f => { return {
@@ -84,9 +72,6 @@ function readMetadata(ignore: string[]) {
     let list = listMD.concat(listYML)
 
     for(const site of list) {
-        
-        //console.log(site.md.meta.path)
-        // TODO: data can set default path
         if (site.md.meta?.path != null && site.md.meta?.path != undefined) {
             site.path = path.join("/", site.md.meta.path)
         } else {
@@ -106,16 +91,12 @@ function readMetadata(ignore: string[]) {
         site.fileName = dirArray.pop()
         dirArray.shift()
         site.dir = dirArray
-
         site.meta = site.md.meta
-        
         site.hidden = site.data?.hidden || false
     }
 
     return list
 }
-
-
 
 export function build(config: any) {
     removeDirectorySync(config.buildDir)
@@ -148,10 +129,4 @@ export function build(config: any) {
                         path.join(config.buildDir, site.path))
         }
     }
-
-    //console.log(readMetadata())
-    // sajt
-
-    // Not to upload now
-    //uploadDirectory(serverConfig, buildFolder)
 }
