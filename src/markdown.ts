@@ -14,11 +14,8 @@ marked.use(markedHighlight({
 }))
 
 export function parseMD(file: string) {
-    
     const fileContents = fs.readFileSync(path.join("./", file), 'utf8')
-    
     const { data: metadata, content: markdownContent } = matter(fileContents)
-
     const htmlContent = marked(markdownContent)
 
     return {

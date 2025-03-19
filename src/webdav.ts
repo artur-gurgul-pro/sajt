@@ -1,3 +1,4 @@
+/*
 import { v2 as webdav } from 'webdav-server';
 
 // 1. Create a user manager and add a user
@@ -27,3 +28,4 @@ server.setFileSystem('/', publicFileSystem, (success) => {
 });
 
 export const webdavMiddleware = webdav.extensions.express("/", server)
+*/
